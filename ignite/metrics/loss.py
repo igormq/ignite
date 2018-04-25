@@ -1,6 +1,5 @@
 from __future__ import division
-
-from torch.autograd import Variable
+from torch import Tensor
 
 from ignite.exceptions import NotComputableError
 from ignite.metrics.metric import Metric
@@ -24,9 +23,11 @@ class Loss(Metric):
 
     def update(self, output):
         y_pred, y = output
-        average_loss = self._loss_fn(Variable(y_pred, volatile=True), Variable(y, volatile=True))
-        assert average_loss.shape == (1,), '`loss_fn` did not return the average loss'
-        self._sum += average_loss.data[0] * y.shape[0]
+        average_loss = self._loss_fn(Tensor(y_pred, requires_grad=False), Tensor(y, requires_grad=False))
+
+        assert average_loss.shape == (0,), '`loss_fn` did not return the average loss'
+
+        self._sum += average_loss.item() * y.shape[0]
         self._num_examples += y.shape[0]
 
     def compute(self):
